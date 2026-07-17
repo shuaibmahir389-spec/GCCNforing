@@ -1,0 +1,14 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "GCCN Faring",
+        "supportEmail": "shahalam8052020@gmail.com"
+      }
+    }
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GCCNফড়িং | Personalized Study Hub, Notice Board & Class Routine</title>
+  <meta name="description"
+    content="GCCNফড়িং is a premium personalized educational assistant providing access to subject-wise PDF storehouse, academic notice boards, and class routine schedules.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Galada&family=Hind+Siliguri:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Mobile Home Screen (PWA / iOS / Android Add to Home Screen) Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GCCNফড়িং">
+  <meta name="theme-color" content="#0a1128">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <!-- PDFJS Library for Cover Thumbnails -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+  </script>
+</head>
+
+<body>
+  <!-- Liquid Glass Background Blobs -->
+  <div class="liquid-blob blob-primary"></div>
+  <div class="liquid-blob blob-secondary"></div>
+  <div class="liquid-blob blob-tertiary"></div>
+
+  <div class="app-container" id="app-container" style="display: none;">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-logo" style="margin-bottom: 16px;">
+        <svg class="dragonfly-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"
+          style="width: 76px; height: 60px; margin-bottom: 4px; filter: drop-shadow(0 4px 10px rgba(52, 152, 219, 0.3));">
+          <!-- Green Twig/Stem -->
+          <path d="M15,72 L85,26" stroke="#87a96b" stroke-width="3.5" stroke-linecap="round" />
+          <path d="M62,41 L66,35" stroke="#87a96b" stroke-width="2.5" stroke-linecap="round" />
+
+          <!-- Dragonfly Legs holding stem -->
+          <path d="M50,42 L58,54 L64,48" fill="none" stroke="#2c3e50" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <path d="M54,42 L62,57 L68,50" fill="none" stroke="#2c3e50" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <path d="M46,42 L49,49 L53,45" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+
+          <!-- Abdomen (segmented blue tail pointing left-up) -->
+          <path d="M38,34 C26,29 13,24 1,21 C0,20.5 0,21.5 1,22 C12,26 24,32 36,38 Z" fill="#2e86de" />
+          <circle cx="5" cy="22" r="1" fill="#54a0ff" />
+          <circle cx="10" cy="24" r="1.2" fill="#54a0ff" />
+          <circle cx="16" cy="26" r="1.5" fill="#54a0ff" />
+          <circle cx="23" cy="29" r="1.8" fill="#54a0ff" />
+          <circle cx="31" cy="33" r="2" fill="#54a0ff" />
+
+          <!-- Thorax (yellow & blue patterned body) -->
+          <path d="M36,38 C40,36 46,36 50,40 C54,44 52,48 46,48 C40,48 36,44 36,38 Z" fill="#57606f" />
+          <path d="M40,38 C42,37 45,37 47,40 C49,43 48,46 44,46 Z" fill="#ff9f43" opacity="0.9" />
+          <!-- Yellow accent -->
+          <path d="M42,39 C43,38 45,39 46,41 C47,43 46,45 43,45 Z" fill="#2e86de" />
+
+          <!-- Head & Compound Eye -->
+          <circle cx="53" cy="42" r="4.5" fill="#2f3542" />
+          <circle cx="54" cy="41" r="3.5" fill="#54a0ff" /> <!-- Eye light blue -->
+          <circle cx="52.5" cy="39.5" r="1" fill="#ffffff" opacity="0.9" />
+
+          <!-- Translucent Wings with yellow bases -->
+          <!-- Back wing left -->
+          <path d="M40,38 C38,28 31,23 27,29 C25,33 32,37 40,38 Z" fill="rgba(84, 160, 255, 0.15)" stroke="#54a0ff"
+            stroke-width="0.8" />
+          <path d="M40,38 C39,34 35,31 33,33 Z" fill="#ff9f43" opacity="0.8" />
+
+          <!-- Front wing left -->
+          <path d="M44,40 C40,23 24,15 20,21 C17,25 29,34 44,40 Z" fill="rgba(84, 160, 255, 0.2)" stroke="#54a0ff"
+            stroke-width="1" />
+          <path d="M44,40 C42,34 35,28 32,31 C31,32 36,37 42,39 Z" fill="#ff9f43" opacity="0.9" />
+
+          <!-- Back wing right -->
+          <path d="M42,38 C46,25 55,19 60,25 C62,29 54,35 42,38 Z" fill="rgba(84, 160, 255, 0.15)" stroke="#54a0ff"
+            stroke-width="0.8" />
+          <path d="M42,38 C44,33 48,31 50,33 Z" fill="#ff9f43" opacity="0.8" />
+
+          <!-- Front wing right -->
+          <path d="M46,40 C53,21 71,11 76,16 C80,20 67,32 46,40 Z" fill="rgba(84, 160, 255, 0.2)" stroke="#54a0ff"
+            stroke-width="1" />
+          <path d="M46,40 C50,34 59,26 63,29 C64,30 58,36 50,39 Z" fill="#ff9f43" opacity="0.9" />
+        </svg>
+        <span class="logo-text">GCCN<span class="highlight">ফড়িং</span></span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <button class="nav-btn active" data-tab="dashboard" id="nav-dashboard">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+              </svg>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-tab="pdf-store" id="nav-pdf-store">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              <span>PDF Storehouse</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-tab="notices" id="nav-notices">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span class="badge-wrapper">Notices <span class="badge" id="notice-badge">0</span></span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-tab="routine" id="nav-routine">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span>Class Routine</span>
+            </button>
+          <li>
+            <button class="nav-btn" data-tab="expenses" id="nav-expenses">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+              <span>Monthly Expenses</span>
+            </button>
+          </li>
+          <li>
+            <a href="https://portal.cloudcampus24.com/" target="_blank" class="nav-btn payment-nav-btn"
+              id="nav-payment">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+              <span>College Payment</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Sidebar Footer (Theme Toggle + User Profile info) -->
+      <div class="sidebar-footer">
+        <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle dark/light theme">
+          <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2" />
+            <path d="M12 20v2" />
+            <path d="M4.93 4.93l1.41 1.41" />
+            <path d="M17.66 17.66l1.41 1.41" />
+            <path d="M2 12h2" />
+            <path d="M20 12h2" />
+            <path d="M6.34 17.66l-1.41 1.41" />
+            <path d="M19.07 4.93l-1.41 1.41" />
+          </svg>
+          <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+          </svg>
+          <span id="theme-text">Light Mode</span>
+        </button>
+        <div class="sidebar-socials">
+          <a href="https://www.facebook.com/share/1EoTqP3t9p/" target="_blank"
+            class="social-icon-btn facebook liquid-glass" aria-label="Facebook Profile">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/mahadi_mirage?igsh=MTFyOXY3b3doMjBpdA==" target="_blank"
+            class="social-icon-btn instagram liquid-glass" aria-label="Instagram Profile">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+            </svg>
+          </a>
+        </div>
+
+        <div class="user-profile">
+          <div class="avatar">
+            <img id="sidebar-avatar-img" src="profile.jpg" alt="Mahadi" class="profile-pic"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <span style="display: none;">M</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">Mahadi</span>
+            <span class="user-role">Basic BSc in Nursing</span>
+            <a href="mailto:shahalam8052020@gmail.com" class="user-email">shahalam8052020@gmail.com</a>
+
+            <!-- Admin Lock Status Controller -->
+            <div class="admin-status-wrapper" style="margin-top: 8px;">
+              <button id="admin-logout-btn" class="text-btn"
+                style="font-size: 10px; color: var(--color-primary); font-weight: 700; padding: 3px 8px; border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; background: rgba(225, 29, 72, 0.05); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" style="width: 10px; height: 10px;">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+
+          <header class="mobile-header" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"
+            style="width: 40px; height: 32px; filter: drop-shadow(0 2px 4px rgba(52, 152, 219, 0.25));">
+            <path d="M15,72 L85,26" stroke="#87a96b" stroke-width="3.5" stroke-linecap="round" />
+            <path d="M38,34 C26,29 13,24 1,21 C0,20.5 0,21.5 1,22 Z" fill="#2e86de" />
+            <circle cx="53" cy="42" r="4.5" fill="#2f3542" />
+            <circle cx="54" cy="41" r="3.5" fill="#54a0ff" />
+          </svg>
+          <h2 style="font-size: 19px; font-weight: 800; margin: 0; letter-spacing: -0.3px; color: #fff;">
+            GCCN<span style="color: var(--color-primary);">ফড়িং</span>
+          </h2>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <!-- Mobile Theme Toggle Button -->
+          <button id="mobile-theme-toggle-btn" class="modern-hamburger" aria-label="Toggle Theme">
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px; display: none;">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </button>
+
+          <!-- Mobile Admin Menu Trigger (Hamburger Drawer Button) -->
+          <button id="mobile-menu-trigger" class="modern-hamburger" aria-label="Open Admin Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;">
+              <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round" />
+              <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round" />
+              <line x1="3" y1="18" x2="21" y2="18" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Top header (Dynamic page title, search bar, dates) -->
+      <header class="content-header">
+        <div class="header-left">
+          <h1 id="page-title">Dashboard</h1>
+          <p class="current-date" id="live-date">Thursday, July 16, 2026</p>
+        </div>
+        <div class="header-right">
+          <div class="search-bar-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="search" placeholder="Global search PDFs, notices..." id="global-search">
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Body Container with tabs -->
+      <div class="workspace-body">
+
+        <!-- ==================== DASHBOARD TAB ==================== -->
+        <section id="tab-dashboard" class="tab-content active">
+          <!-- Greeting Section without Banner Background -->
+          <div class="greeting-container" style="margin-bottom: 24px; padding: 12px 0; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <h2 class="bengali-greetings" style="font-size: 15px; margin: 0; font-weight: 700; color: #fff;">আসসালামু আলাইকুম</h2>
+              <span style="opacity: 0.3;">|</span>
+              <span id="bangla-digital-watch" style="font-family: monospace; font-size: 13.5px; font-weight: 700; color: var(--color-primary); background: rgba(225,29,72,0.08); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(225,29,72,0.15); letter-spacing: 0.5px;">00:00:00</span>
+            </div>
+            <p
+              style="font-size: 12px; font-weight: 500; opacity: 0.6; margin: 0; color: var(--text-main);">
+              Basic BSc in Nursing Study Portal</p>
+          </div>
+
+          <!-- Small Peaceful Quran Ayat Card (Liquid Glass with Soft breathing pulse) -->
+          <div class="glass-card peaceful-ayat-card" style="margin-bottom: 24px;">
+            <div class="peaceful-ayat-glow"></div>
+            <div class="peaceful-ayat-content">
+              <div class="ayat-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" class="ayat-star-icon">
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+                  </path>
+                </svg>
+              </div>
+              <div class="ayat-text-wrapper">
+                <p id="ayat-text" class="ayat-text">"Indeed, with hardship [will be] ease."</p>
+                <span id="ayat-ref" class="ayat-ref">— Surah Ash-Sharh [94:6]</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Grid -->
+          <div class="dashboard-grid">
+
+            <!-- Dynamic Current Class Status -->
+            <div class="glass-card current-class-card" id="upcoming-class-widget">
+              <div class="card-header">
+                <h3>Today's Routine Timeline</h3>
+                <span class="status-indicator live" id="live-status">Checking schedule...</span>
+              </div>
+              <div class="routine-timeline-container" id="timeline-list">
+                <!-- Javascript will populate today's classes chronologically -->
+              </div>
+            </div>
+
+            <!-- Quick Notices Widget -->
+            <div class="glass-card notices-widget">
+              <div class="card-header">
+                <h3>Recent Announcements</h3>
+                <button class="text-btn view-all-btn" data-target-tab="notices">View All</button>
+              </div>
+              <div class="widget-list" id="recent-notices-list">
+                <!-- Javascript dynamic loading -->
+              </div>
+            </div>
+
+            <!-- Quick PDF Favorites Widget -->
+            <div class="glass-card favorites-widget">
+              <div class="card-header">
+                <h3>Bookmarked & Shared Study Material</h3>
+                <button class="text-btn view-all-btn" data-target-tab="pdf-store">Explore Library</button>
+              </div>
+              <div class="pdf-horizontal-scroller" id="recent-favorites-list">
+                <!-- Javascript dynamic loading -->
+              </div>
+            </div>
+
+            <!-- College Payment Portal Link Card -->
+            <div class="glass-card payment-portal-card">
+              <div class="payment-card-content">
+                <div class="payment-icon-wrapper">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                  </svg>
+                </div>
+                <div class="payment-details">
+                  <h3>CloudCampus24 Payment</h3>
+                  <p>Pay college admission, semester, exam fees directly via official portal.</p>
+                  <a href="https://portal.cloudcampus24.com/" target="_blank" class="primary-btn payment-action-btn">
+                    <span>Pay Fees Online</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow-icon">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Personalized Workout Planner Card -->
+            <div class="glass-card workout-planner-card" id="workout-widget">
+              <!-- Rendered dynamically by app.js -->
+            </div>
+
+            <!-- Drink Water Reminder Widget -->
+            <div class="glass-card water-reminder-card">
+              <div class="water-card-content">
+                <div class="water-header">
+                  <h3>Hydration Tracker 💧</h3>
+                  <p>Stay sharp & active. Log your water intake.</p>
+                </div>
+                <div class="water-tracker-body">
+                  <div class="water-status-display">
+                    <div class="water-percentage-bubble" id="water-progress-text">0%</div>
+                    <div class="water-labels">
+                      <span class="water-current" id="water-current-amount">0 ml</span>
+                      <span class="water-target">Target: 2000 ml</span>
+                    </div>
+                  </div>
+                  <div class="water-level-container">
+                    <div class="water-level-fill" id="water-level-fill" style="height: 0%;"></div>
+                  </div>
+                  <div class="water-actions">
+                    <button type="button" class="primary-btn add-water-btn" id="add-water-btn">
+                      <span>Drink +250ml</span>
+                    </button>
+                    <button type="button" class="sec-btn reset-water-btn" id="reset-water-btn" title="Reset Hydration">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" style="width: 14px; height: 14px;">
+                        <path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==================== PDF STOREHOUSE TAB ==================== -->
+        <section id="tab-pdf-store" class="tab-content">
+          <div class="pdf-store-controls">
+            <div class="filter-group" id="pdf-subject-filters">
+              <!-- Generated dynamically by app.js -->
+            </div>
+
+            <div class="pdf-action-buttons">
+              <button class="primary-btn" id="upload-pdf-trigger">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Add Study PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pdf-gallery-grid" id="pdf-store-grid">
+            <!-- Grid of PDFs -->
+          </div>
+        </section>
+
+        <!-- ==================== NOTICES TAB ==================== -->
+        <section id="tab-notices" class="tab-content">
+          <div class="notices-controls">
+            <div class="category-tabs">
+              <button class="cat-tab active" data-category="all">All Notices</button>
+              <button class="cat-tab" data-category="exams">Exams & Tests</button>
+              <button class="cat-tab" data-category="academic">Academic & Schedule</button>
+              <button class="cat-tab" data-category="events">Events & Extra</button>
+            </div>
+            <div class="notice-actions" style="display: flex; gap: 10px;">
+              <button class="sec-btn" id="mark-all-read-btn">Mark all as Read</button>
+              <button type="button" class="primary-btn" id="add-notice-trigger">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Post Notice</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="notices-list-container" id="notices-master-list">
+            <!-- Notices render here -->
+          </div>
+        </section>
+
+        <!-- ==================== CLASS ROUTINE TAB ==================== -->
+        <section id="tab-routine" class="tab-content">
+          <div class="routine-controls">
+            <div class="routine-meta">
+              <h3>Class & Exam Routine</h3>
+              <p>View your weekly schedule or upload a custom routine image/PDF file.</p>
+            </div>
+            <div class="routine-actions">
+              <button class="primary-btn" id="add-class-trigger">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Add Class Slot</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="routine-view-toggle-bar">
+            <button type="button" class="toggle-view-btn active" data-mode="grid">Weekly Tracker Grid</button>
+            <button type="button" class="toggle-view-btn" data-mode="custom">Custom Routine File</button>
+          </div>
+
+          <!-- Interactive Grid Pane -->
+          <div class="routine-view-pane active" id="routine-grid-pane">
+            <!-- Desktop Timetable Grid View -->
+            <div class="routine-timetable-wrapper timetable-desktop-view">
+              <div class="timetable-grid">
+                <div class="timetable-day-header empty"></div>
+                <div class="timetable-day-header">Saturday</div>
+                <div class="timetable-day-header">Sunday</div>
+                <div class="timetable-day-header">Monday</div>
+                <div class="timetable-day-header">Tuesday</div>
+                <div class="timetable-day-header">Wednesday</div>
+                <div class="timetable-day-header">Thursday</div>
+                <div class="timetable-day-header">Friday</div>
+                <div class="timetable-body-contents" id="timetable-body">
+                  <!-- Timetable rows injected programmatically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Concise List View -->
+            <div class="timetable-mobile-view" style="display: none; flex-direction: column; gap: 16px; width: 100%;">
+              <!-- Day Selector Carousel -->
+              <div class="mobile-day-selector" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; width: 100%; box-sizing: border-box; -webkit-overflow-scrolling: touch;">
+                <!-- Populated dynamically -->
+              </div>
+              <!-- Day's Classes List -->
+              <div class="mobile-classes-list" id="mobile-routine-list" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                <!-- Dynamic list of classes -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Routine Upload & View Pane -->
+          <div class="routine-view-pane" id="routine-custom-pane">
+            <div class="custom-routine-container">
+              <!-- Upload Zone -->
+              <div class="custom-routine-upload-zone" id="routine-upload-zone">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <h3>Upload Routine Document</h3>
+                <p>Drag & drop your class routine photo (PNG, JPG, JPEG) or PDF here, or browse files</p>
+                <button type="button" class="primary-btn" id="routine-file-browse-btn">Browse Files</button>
+                <input type="file" id="routine-file-input" accept="image/*, application/pdf" style="display: none;">
+              </div>
+
+              <!-- Placeholder for Guest / Non-admin when no file is uploaded -->
+              <div id="routine-empty-guest-placeholder"
+                style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; background: rgba(255,255,255,0.01); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; min-height: 250px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.5"
+                  style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; color: var(--color-primary);">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--text-main);">No Custom
+                  Routine File</h3>
+                <p style="font-size: 12px; opacity: 0.6; max-width: 280px; margin: 0;">The administrator has not
+                  uploaded a custom schedule file yet.</p>
+              </div>
+
+              <!-- Display Zone -->
+              <div class="custom-routine-display-zone" id="routine-display-zone" style="display: none;">
+                <div class="display-zone-header">
+                  <div class="file-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2" class="file-icon" id="routine-display-icon">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    </svg>
+                    <div>
+                      <h4 id="routine-file-name">routine.png</h4>
+                      <p id="routine-file-meta">Image • Uploaded Jul 16, 2026</p>
+                    </div>
+                  </div>
+                  <div class="display-zone-actions">
+                    <button type="button" class="sec-btn danger-btn" id="routine-reset-btn">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      Delete
+                    </button>
+                    <a href="#" class="primary-btn dwn-link" id="routine-dwn-btn" download="class_routine.png">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download
+                    </a>
+                  </div>
+                </div>
+
+                <div class="routine-viewer-frame">
+                  <!-- For images -->
+                  <div class="routine-image-viewer" id="routine-img-viewer">
+                    <div class="zoom-controls">
+                      <button type="button" id="zoom-out-btn" title="Zoom Out">-</button>
+                      <button type="button" id="zoom-reset-btn" title="Reset Zoom">100%</button>
+                      <button type="button" id="zoom-in-btn" title="Zoom In">+</button>
+                    </div>
+                    <div class="image-viewport" id="routine-img-viewport">
+                      <img src="" id="routine-img-element" alt="Uploaded Routine" draggable="false">
+                    </div>
+                  </div>
+
+                  <!-- For PDFs -->
+                  <div class="routine-pdf-viewer" id="routine-pdf-viewer" style="display: none;">
+                    <iframe src="" id="routine-pdf-iframe" title="PDF Routine Preview"></iframe>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== MONTHLY EXPENSES TAB ==================== -->
+        <section id="tab-expenses" class="tab-content">
+          <!-- Guest Lock Screen -->
+          <div id="expenses-lock-pane"
+            style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 20px; min-height: 400px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; backdrop-filter: blur(10px);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5"
+              style="width: 64px; height: 64px; color: var(--color-primary); opacity: 0.8; margin-bottom: 20px; animation: peacefulGreetingsBreath 3s infinite ease-in-out;">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #fff;">Monthly Expense Portal
+              Locked</h3>
+            <p style="font-size: 13.5px; opacity: 0.65; max-width: 380px; line-height: 1.5; margin: 0 0 20px 0;">
+              For privacy, the customized expense tracking calculator is locked. Unlock the Owner Admin controls in the
+              sidebar profile card to continue.
+            </p>
+          </div>
+
+          <!-- Admin Calculator Pane -->
+          <div id="expenses-admin-pane" style="display: none; flex-direction: column; gap: 20px;">
+            <!-- Top Summary Header Cards -->
+            <div class="expense-summary-grid"
+              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+
+              <!-- Total Spent Liquid Glass Card -->
+              <div class="expense-card liquid-glass"
+                style="padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                  <span style="font-size: 11px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total Spent</span>
+                  <select id="active-month-select" style="padding: 2px 6px; font-size: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); color: #fff; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px;">
+                    <!-- Filled dynamically -->
+                  </select>
+                </div>
+                <strong id="exp-total-spent" style="font-size: 28px; color: var(--color-primary); font-weight: 800;">0
+                  BDT</strong>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="opacity: 0.5; font-size: 9px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px;">Pocket Money Balance</span>
+                    <span style="font-weight: 800; font-size: 15px; color: #fff;"><span id="exp-pocket-money-val">0</span> BDT</span>
+                  </div>
+                  <!-- Add Money Trigger Button -->
+                  <button type="button" id="add-money-trigger-btn" class="primary-btn" style="padding: 5px 10px; font-size: 11px; border-radius: 8px; display: flex; align-items: center; gap: 4px; height: max-content; cursor: pointer;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 10px; height: 10px;">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Funds
+                  </button>
+                </div>
+              </div>
+
+              <!-- Budget Progress Fill Liquid Glass Card -->
+              <div class="expense-card liquid-glass"
+                style="padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600;">
+                  <span>Budget Allocation</span>
+                  <span id="exp-budget-pct">0%</span>
+                </div>
+                <div class="meter-bar-outer"
+                  style="width: 100%; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                  <div id="exp-budget-fill"
+                    style="height: 100%; width: 0%; background: linear-gradient(to right, var(--color-primary), var(--color-accent-purple)); border-radius: 5px; transition: width 0.4s ease;">
+                  </div>
+                </div>
+                <span id="exp-remaining-display" style="font-size: 11.5px; opacity: 0.7;">Remaining BDT: 20,000</span>
+              </div>
+            </div>
+
+            <!-- Double Column Layout -->
+            <div class="expense-split-layout"
+              style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: start;">
+              <!-- Left Column: Add Transaction Form & Category Analysis -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Add Form Card -->
+                <div class="expense-inner-card liquid-glass"
+                  style="padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.01);">
+                  <h4
+                    style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--color-primary);">
+                    Add New Expense</h4>
+                  <form id="add-expense-form" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <label style="font-size: 11px; opacity: 0.7; font-weight: 600;">Description *</label>
+                      <input type="text" id="exp-desc" required placeholder="e.g. Clinical Stethoscope"
+                        style="padding: 8px 12px; font-size: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); color: #fff;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <label style="font-size: 11px; opacity: 0.7; font-weight: 600;">Amount (BDT) *</label>
+                      <input type="number" id="exp-amount" min="1" required placeholder="Amount"
+                        style="padding: 8px 12px; font-size: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); color: #fff;">
+                    </div>
+                    <button type="submit" class="primary-btn"
+                      style="width: 100%; padding: 10px; font-size: 12px; margin-top: 6px;">Add Transaction</button>
+                  </form>
+                </div>
+
+                <!-- Pocket Money Funds History Card -->
+                <div class="expense-inner-card liquid-glass"
+                  style="padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.01);">
+                  <h4
+                    style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--color-primary);">
+                    Funds History Logs</h4>
+                  <div id="pocket-money-history-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Pocket Money addition history items dynamic loaded -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Transactions Registry -->
+              <div class="expense-inner-card liquid-glass"
+                style="padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 12px; height: 420px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--color-primary);">Transactions
+                    History</h4>
+                  <button id="clear-all-expenses" class="sec-btn"
+                    style="font-size: 11px; padding: 4px 8px; border-color: rgba(225,29,72,0.2); background: rgba(225,29,72,0.02); color: var(--danger-color);">Clear
+                    All</button>
+                </div>
+                <!-- Table Scroller -->
+                <div class="expense-scroller" style="flex: 1; overflow-y: auto; padding-right: 2px;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                    <thead>
+                      <tr
+                        style="border-bottom: 1px solid rgba(255,255,255,0.08); opacity: 0.6; font-size: 10.5px; text-transform: uppercase;">
+                        <th style="padding: 8px 4px;">Description</th>
+                        <th style="padding: 8px 4px; text-align: right;">Amount</th>
+                        <th style="padding: 8px 4px; text-align: center; width: 40px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="expense-transactions-body">
+                      <!-- Transactions rows mapped dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Month History Trigger -->
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button id="save-month-history-btn" class="primary-btn"
+                style="padding: 10px 18px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" style="width: 14px; height: 14px;">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                <span>Save & Close Current Month</span>
+              </button>
+            </div>
+
+            <!-- Saved Expense History Log -->
+            <div class="expense-inner-card liquid-glass"
+              style="padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h4
+                  style="margin: 0; font-size: 14px; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.5px;">
+                  Saved Monthly History Logs</h4>
+                
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <label for="history-month-filter" style="font-size: 11px; opacity: 0.7; font-weight: 600;">Filter Month:</label>
+                  <select id="history-month-filter" style="padding: 4px 8px; font-size: 11px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25); color: #fff;">
+                    <option value="all">All Months</option>
+                  </select>
+                </div>
+              </div>
+              <div id="expense-history-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- History blocks render dynamically -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- PDF View Modal -->
+  <div class="modal-backdrop" id="pdf-view-modal">
+    <div class="modal-container modal-large">
+      <div class="modal-header">
+        <h3 id="pdf-view-title">Document Preview</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body pdf-preview-body">
+        <div class="pdf-meta-sidebar">
+          <div class="pdf-badge" id="pdf-view-subject">Mathematics</div>
+          <p class="pdf-desc" id="pdf-view-desc">A brief overview of matrices, determinant properties, and vector
+            multiplication.</p>
+          <div class="pdf-sidebar-actions">
+            <a href="#" class="primary-btn dwn-link" id="pdf-download-btn" download>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download PDF
+            </a>
+            <button class="primary-btn" id="preview-open-external" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" style="width: 14px; height: 14px;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              <span>Open in Tab</span>
+            </button>
+            <button class="sec-btn" id="pdf-favorite-toggle-btn">
+              <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path
+                  d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+              <span>Add to Favorites</span>
+            </button>
+          </div>
+        </div>
+        <div class="pdf-display-frame">
+          <!-- We can embed a custom document view mock, or use iframe -->
+          <iframe id="pdf-iframe-preview" src="" title="PDF Preview"></iframe>
+          <div class="pdf-error-placeholder" id="pdf-iframe-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="placeholder-icon">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M12 18v-6" />
+              <path d="M8 15h8" />
+            </svg>
+            <p>PDF reader sandbox loaded. Preview simulated for demo purposes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Upload PDF Modal -->
+  <div class="modal-backdrop" id="add-pdf-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Add New Study PDF Document</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form class="modal-body form-grid" id="add-pdf-form">
+        <div class="form-group">
+          <label for="pdf-title">Document Title *</label>
+          <input type="text" id="pdf-title" required placeholder="e.g. Chapter 4: Electric Induction">
+        </div>
+        <div class="form-group">
+          <label for="pdf-subject">Subject Area *</label>
+          <select id="pdf-subject" required>
+            <!-- Generated dynamically by app.js -->
+          </select>
+          <div class="form-group" id="custom-subject-group" style="display: none; margin-top: 12px;">
+            <label for="custom-subject-name">New Subject Name *</label>
+            <input type="text" id="custom-subject-name" placeholder="e.g. Geriatric Nursing" style="width: 100%;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="pdf-description">Brief Description / Study Notes</label>
+          <textarea id="pdf-description"
+            placeholder="Write standard study notes or homework deadlines linked with this document..."
+            rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="pdf-link">PDF Link or File Reference (Optional)</label>
+          <input type="url" id="pdf-link" placeholder="https://example.com/notes.pdf or upload below">
+          <div class="file-upload-zone" id="file-drop-zone">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <p>Drag & drop educational PDF here or <span>Browse files</span></p>
+            <input type="file" id="pdf-file-raw" accept=".pdf" style="display: none;">
+            <span class="file-status-label" id="file-upload-status">No file selected</span>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="sec-btn close-modal-action-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Save to Library</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Routine Class Slot Modal -->
+  <div class="modal-backdrop" id="add-class-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="class-modal-title">Add Class Slot</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form class="modal-body form-grid" id="add-class-form">
+        <input type="hidden" id="edit-class-id">
+        <div class="form-group">
+          <label for="class-subject-name">Subject/Class Name *</label>
+          <input type="text" id="class-subject-name" required placeholder="e.g. Advanced Chemistry Lab">
+        </div>
+        <div class="form-group">
+          <label for="class-teacher">Teacher Name</label>
+          <input type="text" id="class-teacher" placeholder="e.g. Dr. Emily Carter">
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="class-day">Day of the Week *</label>
+            <select id="class-day" required>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="class-room">Classroom/Hall</label>
+            <input type="text" id="class-room" placeholder="e.g. Lab 4B or Room 302">
+          </div>
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="class-start">Start Time *</label>
+            <input type="time" id="class-start" required value="09:00">
+          </div>
+          <div class="form-group">
+            <label for="class-end">End Time *</label>
+            <input type="time" id="class-end" required value="10:00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="class-color">Label Theme Color</label>
+          <div class="color-palette-selector">
+            <label class="color-dot color-purple"><input type="radio" name="class-color"
+                value="var(--color-accent-purple)" checked></label>
+            <label class="color-dot color-blue"><input type="radio" name="class-color"
+                value="var(--color-accent-blue)"></label>
+            <label class="color-dot color-green"><input type="radio" name="class-color"
+                value="var(--color-accent-green)"></label>
+            <label class="color-dot color-orange"><input type="radio" name="class-color"
+                value="var(--color-accent-orange)"></label>
+            <label class="color-dot color-pink"><input type="radio" name="class-color"
+                value="var(--color-accent-pink)"></label>
+          </div>
+        </div>
+        <div class="form-actions" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; width: 100%;">
+          <button type="button" class="sec-btn close-modal-action-btn" style="margin-right: auto;">Cancel</button>
+          <button type="button" class="sec-btn" id="delete-class-btn" style="display: none; border-color: rgba(225,29,72,0.3); color: var(--danger-color); background: rgba(225,29,72,0.03);">Delete Slot</button>
+          <button type="submit" class="primary-btn">Save Class Slot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Post Notice Modal -->
+  <div class="modal-backdrop" id="add-notice-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Post New Announcement</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form class="modal-body form-grid" id="add-notice-form">
+        <div class="form-group">
+          <label for="notice-title-input">Notice Title *</label>
+          <input type="text" id="notice-title-input" required placeholder="e.g. Practical Exam Guidelines">
+        </div>
+        <div class="form-group">
+          <label for="notice-category-input">Notice Category *</label>
+          <select id="notice-category-input" required>
+            <option value="exams">Exams & Tests</option>
+            <option value="academic" selected>Academic & Schedule</option>
+            <option value="events">Events & Extra</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="notice-content-input">Announcement Details *</label>
+          <textarea id="notice-content-input" required placeholder="Type the announcement details here..."
+            rows="4"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="sec-btn close-modal-action-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Post Announcement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Authentication Screen Overlay -->
+  <div class="login-screen-overlay" id="login-screen" style="display: flex;">
+    <div class="login-glass-card">
+      <div class="login-header">
+        <svg class="dragonfly-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" style="width: 80px; height: 64px; filter: drop-shadow(0 4px 10px rgba(225, 29, 72, 0.3)); margin-bottom: 8px;">
+          <path d="M15,72 L85,26" stroke="#87a96b" stroke-width="3.5" stroke-linecap="round" />
+          <path d="M38,34 C26,29 13,24 1,21 C0,20.5 0,21.5 1,22 Z" fill="#2e86de" />
+          <circle cx="53" cy="42" r="4.5" fill="#2f3542" />
+          <circle cx="54" cy="41" r="3.5" fill="#54a0ff" />
+        </svg>
+        <h2 class="login-title" style="margin: 0; font-family: 'Galada', cursive; font-size: 32px; color: #fff; font-weight: 400; line-height: 1.2;">GCCN<span class="highlight" style="color: var(--color-primary);">ফড়িং</span></h2>
+        <p class="login-subtitle" style="margin: 4px 0 0; font-size: 13px; opacity: 0.65; font-weight: 500; letter-spacing: 0.3px;">Personalized Study Hub & Assistant</p>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="firebase-auth-form" class="login-form" style="display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 20px;">
+        <h3 id="form-header-title" style="margin: 0; font-size: 18px; font-weight: 700; color: #fff; text-align: left;">Sign In</h3>
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+          <label for="login-email" style="font-size: 12px; font-weight: 600; opacity: 0.85;">Email Address</label>
+          <input type="email" id="login-email" required placeholder="name@domain.com" style="width: 100%; padding: 10px 12px; font-size: 13px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); color: #fff; box-sizing: border-box;">
+        </div>
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 6px; text-align: text-left;">
+          <label for="login-password" style="font-size: 12px; font-weight: 600; opacity: 0.85; display: block; text-align: left;">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" style="width: 100%; padding: 10px 12px; font-size: 13px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); color: #fff; box-sizing: border-box;">
+        </div>
+        <button type="submit" class="primary-btn login-btn" id="login-submit-btn" style="width: 100%; padding: 11px; font-size: 13.5px; font-weight: 700; margin-top: 6px; cursor: pointer; border-radius: 8px; background: var(--color-primary); color: #fff; border: none; box-shadow: 0 4px 15px rgba(225,29,72,0.35);">Sign In</button>
+      </form>
+
+      <!-- Toggle Mode -->
+      <div class="login-toggle-text" style="margin-top: 14px; font-size: 12.5px; opacity: 0.85;">
+        <span id="login-toggle-desc">Don't have an account?</span>
+        <button id="login-toggle-mode-btn" class="text-link-btn" style="background: none; border: none; color: var(--color-primary); font-weight: 700; cursor: pointer; padding: 0 4px; font-size: 12.5px;">Create Account</button>
+      </div>
+
+      <div class="login-divider" style="display: flex; align-items: center; justify-content: center; width: 100%; margin: 16px 0; font-size: 12px; opacity: 0.45; gap: 10px;">
+        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.15);"></div>
+        <span>or</span>
+        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.15);"></div>
+      </div>
+
+      <!-- Google Authentication -->
+      <button class="google-btn" id="google-login-btn" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #fff; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="16px" height="16px">
+          <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+          <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+          <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.422-5.192l-6.239-5.199C29.266,35.191,26.755,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+          <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.169C36.983,39.207,44,32.22,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <!-- Guest Access Toggler -->
+      <div style="margin-top: 14px; text-align: center;">
+        <button id="guest-access-btn" class="text-link-btn" style="background: none; border: none; color: rgba(255,255,255,0.45); font-weight: 500; cursor: pointer; font-size: 11.5px; text-decoration: underline;">Enter as Guest (Offline Mode)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Expense History Modal -->
+  <div class="modal-backdrop" id="save-history-modal">
+    <div class="modal-container" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3>Save Month History Log</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form class="modal-body form-grid" id="save-history-form"
+        style="display: flex; flex-direction: column; gap: 12px; padding: 16px;">
+        <p style="font-size: 12.5px; opacity: 0.75; line-height: 1.45; margin: 0;">
+          Save your current month's expenses and pocket money allowance. This will archive the transactions list and
+          reset the ledger for a new month.
+        </p>
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="history-month-input" style="font-size: 11.5px; font-weight: 600;">Month Label *</label>
+          <input type="text" id="history-month-input" required placeholder="e.g. July 2026"
+            style="width: 100%; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); color: #fff;">
+        </div>
+        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="sec-btn close-modal-action-btn"
+            style="padding: 8px 16px; font-size: 12px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="padding: 8px 16px; font-size: 12px;">Save & Reset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mobile Admin Bio & Socials Menu Drawer -->
+  <div class="modal-backdrop" id="mobile-admin-drawer-modal">
+    <div class="modal-container" style="max-width: 350px; width: 90%; border-radius: 20px; animation: popupZoomIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+      <div class="modal-header" style="padding: 16px 20px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; margin: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--color-primary);">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Owner & Admin Menu
+        </h3>
+        <button class="close-modal-btn" aria-label="Close menu">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 20px; max-height: 80vh; overflow-y: auto; text-align: left;">
+        
+        <!-- Profile details -->
+        <div style="display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+          <div style="position: relative; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.08); border: 2px solid var(--color-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <img id="mobile-drawer-avatar-img" src="profile.jpg" alt="Mahadi Profile" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <span style="font-size: 16px; font-weight: 800; color: var(--color-primary); display: none;">M</span>
+            <!-- Camera upload trigger label (only visible when admin is active) -->
+            <label id="avatar-upload-label" for="avatar-file-input" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: rgba(0,0,0,0.6); color: #fff; text-align: center; font-size: 9px; cursor: pointer; align-items: center; justify-content: center; line-height: 1;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 10px; height: 10px;">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </label>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+          </div>
+          <div>
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">Mahadi</h4>
+            <p style="margin: 2px 0 0 0; font-size: 11.5px; opacity: 0.65; font-weight: 500;">Basic BSc in Nursing</p>
+          </div>
+        </div>
+
+        <!-- Lock Control Button -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-size: 11px; opacity: 0.5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Portal Session Gate</span>
+          <button id="mobile-drawer-lock-toggle-btn" class="primary-btn" style="width: 100%; padding: 10px; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(225,29,72,0.1); border: 1px solid rgba(225,29,72,0.25); color: var(--color-primary);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span id="mobile-drawer-lock-text">Sign Out Account</span>
+          </button>
+        </div>
+
+        <!-- Admin Bio & Social Connections -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 11px; opacity: 0.5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Connect with Admin</span>
+          
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Gmail -->
+            <a href="mailto:shahalam8052020@gmail.com" class="glass-card" style="padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); transition: background 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <div style="font-size: 12px; font-weight: 600; color: #fff;">
+                shahalam8052020@gmail.com
+                <span style="display: block; font-size: 9.5px; opacity: 0.5; font-weight: 400;">Official Gmail</span>
+              </div>
+            </a>
+            
+            <!-- Facebook -->
+            <a href="https://www.facebook.com/share/1EoTqP3t9p/" target="_blank" class="glass-card" style="padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); transition: background 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: #1877f2; flex-shrink: 0;">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
+              <div style="font-size: 12px; font-weight: 600; color: #fff;">
+                Mahadi Mirage
+                <span style="display: block; font-size: 9.5px; opacity: 0.5; font-weight: 400;">Facebook Profile</span>
+              </div>
+            </a>
+
+            <!-- Instagram -->
+            <a href="https://www.instagram.com/mahadi_mirage?igsh=MTFyOXY3b3doMjBpdA==" target="_blank" class="glass-card" style="padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); transition: background 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: #e1306c; flex-shrink: 0;">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+              </svg>
+              <div style="font-size: 12px; font-weight: 600; color: #fff;">
+                @mahadi_mirage
+                <span style="display: block; font-size: 9.5px; opacity: 0.5; font-weight: 400;">Instagram Account</span>
+              </div>
+            </a>
+
+            <!-- College Portal -->
+            <a href="https://portal.cloudcampus24.com/" target="_blank" class="glass-card" style="padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); transition: background 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: #10b981; flex-shrink: 0;">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+              </svg>
+              <div style="font-size: 12px; font-weight: 600; color: #fff;">
+                GCCN Portal
+                <span style="display: block; font-size: 9.5px; opacity: 0.5; font-weight: 400;">CloudCampus24 Payment</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Pocket Money Funds Modal -->
+  <div class="modal-backdrop" id="add-funds-modal">
+    <div class="modal-container" style="max-width: 360px;">
+      <div class="modal-header">
+        <h3>Add Pocket Money Funds</h3>
+        <button class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form class="modal-body form-grid" id="add-funds-form" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; text-align: left;">
+        <p style="font-size: 12.5px; opacity: 0.75; line-height: 1.45; margin: 0;">
+          Add funds to your pocket money allowance balance. This transaction will update your dynamic budget allowance and record an entry in your history log.
+        </p>
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="add-funds-amount-input" style="font-size: 11.5px; font-weight: 600;">Amount (BDT) *</label>
+          <input type="number" id="add-funds-amount-input" min="1" required placeholder="e.g. 5000" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); color: #fff;">
+        </div>
+        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="sec-btn close-modal-action-btn" style="padding: 8px 16px; font-size: 12px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="padding: 8px 16px; font-size: 12px;">Add Funds</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast-notification-hub" id="toast-hub"></div>
+
+  <!-- Mobile Bottom Tab Bar -->
+  <nav class="mobile-bottom-nav" style="display: none;">
+    <!-- Dashboard Tab -->
+    <button class="mobile-nav-btn active" data-tab="dashboard"
+      style="background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--color-primary); cursor: pointer; padding: 8px; width: 20%; transition: all 0.2s;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width: 20px; height: 20px;">
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
+      </svg>
+      <span style="font-size: 10px; font-weight: 700;">Home</span>
+    </button>
+    <!-- PDFs Tab -->
+    <button class="mobile-nav-btn" data-tab="pdf-store"
+      style="background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 8px; width: 20%; transition: all 0.2s;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width: 20px; height: 20px;">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+      <span style="font-size: 10px; font-weight: 600;">PDFs</span>
+    </button>
+    <!-- Notices Tab -->
+    <button class="mobile-nav-btn" data-tab="notices"
+      style="background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 8px; width: 20%; transition: all 0.2s; position: relative;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width: 20px; height: 20px;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+      <span style="font-size: 10px; font-weight: 600;">Notices</span>
+      <span id="mobile-notice-badge"
+        style="display: none; position: absolute; top: 4px; right: 18px; width: 8px; height: 8px; background: var(--color-primary); border-radius: 50%;"></span>
+    </button>
+    <!-- Routine Tab -->
+    <button class="mobile-nav-btn" data-tab="routine"
+      style="background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 8px; width: 20%; transition: all 0.2s;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width: 20px; height: 20px;">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+      <span style="font-size: 10px; font-weight: 600;">Routine</span>
+    </button>
+    <!-- Expenses Tab -->
+    <button class="mobile-nav-btn" data-tab="expenses"
+      style="background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 8px; width: 20%; transition: all 0.2s;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width: 20px; height: 20px;">
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+      <span style="font-size: 10px; font-weight: 600;">Expenses</span>
+    </button>
+  </nav>
+
+  <!-- Premium Custom PWA Install Popup Banner -->
+  <div id="pwa-install-banner" class="liquid-glass" style="display: none; position: fixed; left: 16px; right: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10, 25, 47, 0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 16px; z-index: 9999; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); transform: translateY(120%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+        <img src="logo.png" alt="GCCNফড়িং Logo" style="width: 40px; height: 40px; object-fit: contain;">
+      </div>
+      <div style="flex-grow: 1;">
+        <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #fff;">Install GCCNফড়িং App</h4>
+        <p style="margin: 2px 0 0 0; font-size: 11px; opacity: 0.7; line-height: 1.4;">Add to your home screen for quick offline routine access!</p>
+      </div>
+      <button id="pwa-close-btn" style="background: none; border: none; color: #fff; opacity: 0.5; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- iOS instruction block (hidden by default) -->
+    <div id="pwa-ios-instructions" style="display: none; font-size: 11.5px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; line-height: 1.5; color: #a5b4fc;">
+      Tap the <strong style="color: var(--color-primary); font-weight: 800; display: inline-flex; align-items: center; gap: 2px;">Share <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px; vertical-align: middle;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg></strong> button at the bottom of Safari, then choose <strong>"Add to Home Screen"</strong>.
+    </div>
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+      <button id="pwa-cancel-btn" class="sec-btn" style="padding: 6px 14px; font-size: 11.5px; border-radius: 8px;">Not Now</button>
+      <button id="pwa-install-btn" class="primary-btn" style="padding: 6px 14px; font-size: 11.5px; border-radius: 8px;">Install Now</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js?v=2.0"></script>
+</body>
+
+</html>
