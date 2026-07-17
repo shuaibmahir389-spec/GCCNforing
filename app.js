@@ -260,6 +260,21 @@ const elements = {
   closeModalBtns: document.querySelectorAll(".close-modal-btn, .close-modal-action-btn")
 };
 
+// --- LOGIN SCREEN OVERLAY UTILITIES ---
+function showLoginOverlay() {
+  const loginScreen = document.getElementById("login-screen");
+  const appContainer = document.getElementById("app-container");
+  if (loginScreen) loginScreen.style.display = "flex";
+  if (appContainer) appContainer.style.display = "none";
+}
+
+function hideLoginOverlay() {
+  const loginScreen = document.getElementById("login-screen");
+  const appContainer = document.getElementById("app-container");
+  if (loginScreen) loginScreen.style.display = "none";
+  if (appContainer) appContainer.style.display = "flex";
+}
+
 // --- INITIALIZATION ---
 function init() {
   // Clear any past sync failure flags to retry connecting on load
@@ -278,6 +293,7 @@ function init() {
     state.user = { email: localStorage.getItem("edu_user_email") || "" };
     state.isAdmin = (state.user.email === "shahalam8052020@gmail.com");
     loadPrefixVariables();
+    startFirestoreSync();
   }
 
   // If the stored PDFs/Routine are from the old template (math etc.), clear and reload them to reflect nursing subjects
@@ -377,27 +393,12 @@ function init() {
       if (loginScreen) loginScreen.style.display = "none";
       if (appContainer) appContainer.style.display = "flex";
       
-      // Update profile info dynamically
-      const userNames = document.querySelectorAll(".user-name");
-      const userRoles = document.querySelectorAll(".user-role");
-      const userEmails = document.querySelectorAll(".user-email");
-      
-      const displayName = user.displayName || (user.email === "shahalam8052020@gmail.com" ? "Mahadi" : user.email.split("@")[0]);
-      const roleText = user.email === "shahalam8052020@gmail.com" ? "Basic BSc in Nursing (Owner)" : "Basic BSc in Nursing (Student)";
-      
-      userNames.forEach(el => el.textContent = displayName);
-      userRoles.forEach(el => el.textContent = roleText);
-      userEmails.forEach(el => {
-        el.textContent = user.email;
-        el.href = `mailto:${user.email}`;
-      });
-
       // Render components
       applyAdminControls();
       render();
       
       // Force initial fetch
-      syncFromCloud();
+      startFirestoreSync();
     } else {
       // Clear session cache keys
       localStorage.removeItem("edu_logged_in");
@@ -409,92 +410,116 @@ function init() {
       
       if (loginScreen) loginScreen.style.display = "flex";
       if (appContainer) appContainer.style.display = "none";
+      
+      // Stop Firestore listeners
+      stopFirestoreSync();
     }
   });
-
-  // Poll for live database updates from ExtendsClass cloud bin every 10 seconds (skip if admin is logged in)
-  setInterval(() => {
-    if (state.user && !state.isAdmin) {
-      syncFromCloud();
-    }
-  }, 10000);
 
   // Initialize PWA install prompt handler
   setupPwaInstall();
 }
 
-// --- CLOUD SYNCHRONIZATION HELPER ---
-const READ_URLS = {
-  pdfs: "https://extendsclass.com/api/json-storage/bin/acbabfb",
-  routine: "https://extendsclass.com/api/json-storage/bin/eabbdff",
-  notices: "https://extendsclass.com/api/json-storage/bin/dffaaee"
-};
-
-const WRITE_URLS = {
-  pdfs: "/api/sync?key=pdfs",
-  routine: "/api/sync?key=routine",
-  notices: "/api/sync?key=notices"
-};
-
+// --- CLOUD SYNCHRONIZATION HELPER (FIRESTORE) ---
 let isCloudSyncing = false;
+let pdfsUnsubscribe = null;
+let routineUnsubscribe = null;
+let noticesUnsubscribe = null;
 
-async function syncFromCloud() {
-  if (isCloudSyncing) return;
+function startFirestoreSync() {
+  if (!firebaseAvailable || typeof firebase === "undefined" || !firebase.firestore) {
+    console.warn("Firestore SDK is not available. Skipping Firestore sync.");
+    return;
+  }
+  
   try {
-    const [pdfsRes, routineRes, noticesRes] = await Promise.all([
-      fetch(READ_URLS.pdfs).then(r => r.ok ? r.json() : null),
-      fetch(READ_URLS.routine).then(r => r.ok ? r.json() : null),
-      fetch(READ_URLS.notices).then(r => r.ok ? r.json() : null)
-    ]);
-
-    let changed = false;
+    const db = firebase.firestore();
     
-    if (pdfsRes && Array.isArray(pdfsRes)) {
-      // Merge with local Base64 data URLs to preserve uploaded files on this device
-      const mergedPdfs = pdfsRes.map(freshPdf => {
-        const localPdf = state.pdfs.find(p => p.id === freshPdf.id);
-        if (localPdf && localPdf.link && (localPdf.link.startsWith("data:") || localPdf.link.startsWith("blob:"))) {
-          return { ...freshPdf, link: localPdf.link };
+    // Stop any existing listeners first
+    stopFirestoreSync();
+    
+    console.log("Initializing real-time Firestore listeners...");
+    
+    // Listen to pdfs
+    pdfsUnsubscribe = db.collection("portal").doc("pdfs").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data().data || [];
+        // Merge with local Base64 data URLs to preserve uploaded files on this device
+        const mergedPdfs = data.map(freshPdf => {
+          const localPdf = state.pdfs.find(p => p.id === freshPdf.id);
+          if (localPdf && localPdf.link && (localPdf.link.startsWith("data:") || localPdf.link.startsWith("blob:"))) {
+            return { ...freshPdf, link: localPdf.link };
+          }
+          return freshPdf;
+        });
+
+        const freshStr = JSON.stringify(mergedPdfs);
+        if (freshStr !== JSON.stringify(state.pdfs)) {
+          state.pdfs = mergedPdfs;
+          localStorage.setItem("edu_pdfs", freshStr);
+          render();
+          if (!state.isAdmin && state.user) {
+            showToast("Study PDFs updated live!", "info");
+          }
         }
-        return freshPdf;
-      });
+      }
+    }, (error) => {
+      console.error("Firestore sync pdfs failed:", error);
+    });
 
-      const freshStr = JSON.stringify(mergedPdfs);
-      if (freshStr !== JSON.stringify(state.pdfs)) {
-        state.pdfs = mergedPdfs;
-        localStorage.setItem("edu_pdfs", freshStr);
-        changed = true;
+    // Listen to routine
+    routineUnsubscribe = db.collection("portal").doc("routine").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data().data || [];
+        const freshStr = JSON.stringify(data);
+        if (freshStr !== JSON.stringify(state.routine)) {
+          state.routine = data;
+          localStorage.setItem("edu_routine", freshStr);
+          render();
+          if (!state.isAdmin && state.user) {
+            showToast("Class Routine updated live!", "info");
+          }
+        }
       }
-    }
-    if (routineRes && Array.isArray(routineRes)) {
-      const freshStr = JSON.stringify(routineRes);
-      if (freshStr !== JSON.stringify(state.routine)) {
-        state.routine = routineRes;
-        localStorage.setItem("edu_routine", freshStr);
-        changed = true;
-      }
-    }
-    if (noticesRes && Array.isArray(noticesRes)) {
-      const freshStr = JSON.stringify(noticesRes);
-      if (freshStr !== JSON.stringify(state.notices)) {
-        state.notices = noticesRes;
-        localStorage.setItem("edu_notices", freshStr);
-        changed = true;
-      }
-    }
+    }, (error) => {
+      console.error("Firestore sync routine failed:", error);
+    });
 
-    if (changed) {
-      render();
-      if (!state.isAdmin) {
-        showToast("Study PDFs, schedules, or notices updated live!", "info");
+    // Listen to notices
+    noticesUnsubscribe = db.collection("portal").doc("notices").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data().data || [];
+        const freshStr = JSON.stringify(data);
+        if (freshStr !== JSON.stringify(state.notices)) {
+          state.notices = data;
+          localStorage.setItem("edu_notices", freshStr);
+          render();
+          if (!state.isAdmin && state.user) {
+            showToast("Academic Notices updated live!", "info");
+          }
+        }
       }
-    }
-  } catch (error) {
-    console.error("Cloud sync failed:", error);
+    }, (error) => {
+      console.error("Firestore sync notices failed:", error);
+    });
+  } catch (err) {
+    console.error("Failed to start Firestore synchronization listeners:", err);
   }
 }
 
+function stopFirestoreSync() {
+  if (pdfsUnsubscribe) { pdfsUnsubscribe(); pdfsUnsubscribe = null; }
+  if (routineUnsubscribe) { routineUnsubscribe(); routineUnsubscribe = null; }
+  if (noticesUnsubscribe) { noticesUnsubscribe(); noticesUnsubscribe = null; }
+  console.log("Stopped Firestore real-time listeners.");
+}
+
 async function syncToCloud(key, data) {
+  if (!firebaseAvailable || typeof firebase === "undefined" || !firebase.firestore) {
+    console.warn("Firestore SDK not available. Cannot sync to cloud.");
+    return;
+  }
+  
   isCloudSyncing = true;
   try {
     let cleanData = data;
@@ -507,23 +532,15 @@ async function syncToCloud(key, data) {
       });
     }
 
-    const response = await fetch(WRITE_URLS[key], {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(cleanData)
+    const db = firebase.firestore();
+    await db.collection("portal").doc(key).set({
+      data: cleanData
     });
-    if (response.status === 404 || !response.ok) {
-      localStorage.setItem("edu_sync_failed", "true");
-      showToast("Sync Server Offline! Changes are saved locally, but cannot sync to other devices.", "warning");
-      throw new Error(`Sync write failed with status ${response.status}`);
-    } else {
-      localStorage.removeItem("edu_sync_failed");
-    }
+    localStorage.removeItem("edu_sync_failed");
   } catch (error) {
-    console.error(`Failed to push ${key} to cloud:`, error);
+    console.error(`Failed to push ${key} to Firestore:`, error);
     localStorage.setItem("edu_sync_failed", "true");
+    showToast("Firestore Sync failed! Check security rules or database configuration.", "danger");
     throw error;
   } finally {
     isCloudSyncing = false;
@@ -587,6 +604,7 @@ function applyAdminControls() {
   const routineResetBtn = document.getElementById("routine-reset-btn");
   
   const adminLogoutBtn = document.getElementById("admin-logout-btn");
+  const mobileDrawerLockToggleBtn = document.getElementById("mobile-drawer-lock-toggle-btn");
 
   const expensesLockPane = document.getElementById("expenses-lock-pane");
   const expensesAdminPane = document.getElementById("expenses-admin-pane");
@@ -613,11 +631,99 @@ function applyAdminControls() {
     if (expensesAdminPane) expensesAdminPane.style.display = "none";
   }
 
-  // Sign out button is always visible when signed in
-  if (adminLogoutBtn) adminLogoutBtn.style.display = "flex";
+  // Update dynamic user profile information
+  const userNames = document.querySelectorAll(".user-name");
+  const userRoles = document.querySelectorAll(".user-role");
+  const userEmails = document.querySelectorAll(".user-email");
+  
+  let displayName = "";
+  let roleText = "";
+  let emailText = "";
+  let avatarSrc = "profile.jpg";
+  let buttonHtml = "";
+  let mobileDrawerButtonHtml = "";
 
-  // Update profile avatar images across sidebar and mobile menu drawer
-  const avatarSrc = state.adminAvatar || 'profile.jpg';
+  if (state.isAdmin) {
+    displayName = "Mahadi";
+    roleText = "Basic BSc in Nursing (Owner)";
+    emailText = "shahalam8052020@gmail.com";
+    avatarSrc = state.adminAvatar || "profile.jpg";
+    
+    buttonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" style="width: 10px; height: 10px;">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>Lock Admin</span>
+    `;
+    mobileDrawerButtonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>Lock Admin</span>
+    `;
+  } else if (state.user) {
+    displayName = state.user.displayName || state.user.email.split("@")[0];
+    roleText = "Basic BSc in Nursing (Student)";
+    emailText = state.user.email;
+    avatarSrc = state.user.photoURL || "profile.jpg";
+    
+    buttonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" style="width: 10px; height: 10px;">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      <span>Sign Out</span>
+    `;
+    mobileDrawerButtonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      <span>Sign Out</span>
+    `;
+  } else {
+    displayName = "Guest Student";
+    roleText = "Basic BSc in Nursing (Guest)";
+    emailText = "";
+    avatarSrc = "profile.jpg";
+    
+    buttonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" style="width: 10px; height: 10px; color: var(--color-primary);">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span style="color: var(--color-primary); font-weight: 700;">Unlock Admin</span>
+    `;
+    mobileDrawerButtonHtml = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px; color: var(--color-primary);">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span style="color: var(--color-primary); font-weight: 700;">Unlock Admin</span>
+    `;
+  }
+
+  // Update DOM elements
+  userNames.forEach(el => el.textContent = displayName);
+  userRoles.forEach(el => el.textContent = roleText);
+  userEmails.forEach(el => {
+    if (emailText) {
+      el.textContent = emailText;
+      el.href = `mailto:${emailText}`;
+      el.style.display = "";
+    } else {
+      el.textContent = "Guest Mode (Offline)";
+      el.removeAttribute("href");
+    }
+  });
+
   const sidebarAvatar = document.getElementById("sidebar-avatar-img");
   const mobileDrawerAvatar = document.getElementById("mobile-drawer-avatar-img");
   if (sidebarAvatar) sidebarAvatar.src = avatarSrc;
@@ -627,6 +733,32 @@ function applyAdminControls() {
   const avatarUploadLabel = document.getElementById("avatar-upload-label");
   if (avatarUploadLabel) {
     avatarUploadLabel.style.display = isAdmin ? "flex" : "none";
+  }
+
+  // Update profile buttons
+  if (adminLogoutBtn) {
+    adminLogoutBtn.style.display = "flex";
+    adminLogoutBtn.innerHTML = buttonHtml;
+    if (!state.user && !state.isAdmin) {
+      adminLogoutBtn.style.borderColor = "rgba(52, 152, 219, 0.25)";
+      adminLogoutBtn.style.background = "rgba(52, 152, 219, 0.05)";
+      adminLogoutBtn.style.color = "var(--color-primary)";
+    } else {
+      adminLogoutBtn.style.borderColor = "rgba(225, 29, 72, 0.25)";
+      adminLogoutBtn.style.background = "rgba(225, 29, 72, 0.05)";
+      adminLogoutBtn.style.color = "var(--color-primary)";
+    }
+  }
+
+  if (mobileDrawerLockToggleBtn) {
+    mobileDrawerLockToggleBtn.innerHTML = mobileDrawerButtonHtml;
+    if (!state.user && !state.isAdmin) {
+      mobileDrawerLockToggleBtn.style.borderColor = "rgba(52, 152, 219, 0.25)";
+      mobileDrawerLockToggleBtn.style.background = "rgba(52, 152, 219, 0.1)";
+    } else {
+      mobileDrawerLockToggleBtn.style.borderColor = "rgba(225, 29, 72, 0.25)";
+      mobileDrawerLockToggleBtn.style.background = "rgba(225, 29, 72, 0.1)";
+    }
   }
 }
 
@@ -1568,54 +1700,79 @@ function setupEvents() {
         const password = document.getElementById("login-password").value;
         const submitBtn = document.getElementById("login-submit-btn");
         
-        const oldBtnText = submitBtn ? submitBtn.textContent : "Sign In";
+        const oldBtnText = submitBtn ? submitBtn.textContent : (authMode === "login" ? "Sign In" : "Register");
         if (submitBtn) {
           submitBtn.disabled = true;
           submitBtn.textContent = "Processing...";
         }
-        
-        // Intelligent login flow: try to sign in, fallback to create account if user doesn't exist
-        firebase.auth().signInWithEmailAndPassword(email, password)
-          .then(() => {
-            showToast("Signed in successfully!", "success");
-            if (submitBtn) {
-              submitBtn.disabled = false;
-              submitBtn.textContent = oldBtnText;
-            }
-            elements.firebaseAuthForm.reset();
-          })
-          .catch((error) => {
-            console.warn("Initial sign-in failed, checking for registration fallback:", error.code);
-            if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential" || error.code === "auth/user-disabled") {
-              // Try creating the account
-              firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                  showToast("Account created and signed in successfully!", "success");
-                  if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = oldBtnText;
-                  }
-                  elements.firebaseAuthForm.reset();
-                })
-                .catch((regError) => {
-                  if (regError.code === "auth/email-already-in-use") {
-                    showToast("Incorrect password for this email address.", "danger");
-                  } else {
-                    showToast(regError.message, "danger");
-                  }
-                  if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = oldBtnText;
-                  }
-                });
-            } else {
-              showToast(error.message, "danger");
+
+        // Helper to translate Firebase Auth errors into clear messages
+        const getFriendlyErrorMessage = (code, originalMessage) => {
+          switch (code) {
+            case "auth/invalid-email":
+              return "Please enter a valid email address.";
+            case "auth/weak-password":
+              return "Password must be at least 6 characters long.";
+            case "auth/email-already-in-use":
+              return "An account already exists with this email address. Switch to 'Sign In' below to log in.";
+            case "auth/user-not-found":
+              return "No account found with this email. Switch to 'Create Account' below to sign up.";
+            case "auth/wrong-password":
+              return "Incorrect password. Please try again.";
+            case "auth/user-disabled":
+              return "This account has been disabled. Please contact support.";
+            case "auth/invalid-credential":
+              return authMode === "login" 
+                ? "Incorrect email or password. If you don't have an account, click 'Create Account' below."
+                : "Invalid credentials. Please double check your email and password.";
+            case "auth/operation-not-allowed":
+              return "Email/Password accounts are not enabled for this app. Please contact the administrator.";
+            default:
+              return originalMessage || "Authentication failed. Please try again.";
+          }
+        };
+
+        if (authMode === "login") {
+          // Explicit Login Flow
+          firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(() => {
+              showToast("Signed in successfully!", "success");
               if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = oldBtnText;
               }
-            }
-          });
+              elements.firebaseAuthForm.reset();
+            })
+            .catch((error) => {
+              console.error("Sign-in error:", error);
+              const message = getFriendlyErrorMessage(error.code, error.message);
+              showToast(message, "danger");
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = oldBtnText;
+              }
+            });
+        } else {
+          // Explicit Registration Flow
+          firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then(() => {
+              showToast("Account created and signed in successfully!", "success");
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = oldBtnText;
+              }
+              elements.firebaseAuthForm.reset();
+            })
+            .catch((error) => {
+              console.error("Registration error:", error);
+              const message = getFriendlyErrorMessage(error.code, error.message);
+              showToast(message, "danger");
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = oldBtnText;
+              }
+            });
+        }
       });
     }
 
@@ -1657,29 +1814,38 @@ function setupEvents() {
     // Admin / Account Log Out Click
     if (elements.adminLogoutBtn) {
       elements.adminLogoutBtn.addEventListener("click", () => {
-        firebase.auth().signOut()
-          .then(() => {
-            showToast("Signed out successfully", "info");
-          })
-          .catch((error) => {
-            showToast("Sign out failed: " + error.message, "danger");
-          });
+        if (!state.user && !state.isAdmin) {
+          showLoginOverlay();
+        } else {
+          firebase.auth().signOut()
+            .then(() => {
+              showToast("Signed out successfully", "info");
+            })
+            .catch((error) => {
+              showToast("Sign out failed: " + error.message, "danger");
+            });
+        }
       });
     }
 
     const mobileDrawerLockToggleBtn = document.getElementById("mobile-drawer-lock-toggle-btn");
     if (mobileDrawerLockToggleBtn) {
       mobileDrawerLockToggleBtn.addEventListener("click", () => {
-        firebase.auth().signOut()
-          .then(() => {
-            showToast("Signed out successfully", "info");
-            // Close mobile drawer menu if open
-            const appSidebar = document.getElementById("app-sidebar");
-            if (appSidebar) appSidebar.classList.remove("mobile-open");
-          })
-          .catch((error) => {
-            showToast("Sign out failed: " + error.message, "danger");
-          });
+        // Close mobile drawer menu if open
+        const appSidebar = document.getElementById("app-sidebar");
+        if (appSidebar) appSidebar.classList.remove("mobile-open");
+
+        if (!state.user && !state.isAdmin) {
+          showLoginOverlay();
+        } else {
+          firebase.auth().signOut()
+            .then(() => {
+              showToast("Signed out successfully", "info");
+            })
+            .catch((error) => {
+              showToast("Sign out failed: " + error.message, "danger");
+            });
+        }
       });
     }
   }
@@ -1699,6 +1865,26 @@ function setupEvents() {
       applyAdminControls();
       render();
       showToast("Accessing portal in Student Guest Mode.", "info");
+      startFirestoreSync();
+    });
+  }
+
+  // Expenses Unlock Admin Controls Trigger Click
+  const expensesUnlockAdminBtn = document.getElementById("expenses-unlock-admin-btn");
+  if (expensesUnlockAdminBtn) {
+    expensesUnlockAdminBtn.addEventListener("click", () => {
+      showLoginOverlay();
+    });
+  }
+
+  // Event delegation for dynamically rendered calorie targets unlock trigger
+  const workoutWidget = document.getElementById("workout-widget");
+  if (workoutWidget) {
+    workoutWidget.addEventListener("click", (e) => {
+      const trigger = e.target.closest("#calorie-unlock-admin-trigger");
+      if (trigger) {
+        showLoginOverlay();
+      }
     });
   }
 
@@ -2754,12 +2940,12 @@ function renderWorkoutWidget() {
           <!-- Inputs Grid -->
           <div class="calculator-inputs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             ${!state.isAdmin ? `
-              <div style="grid-column: span 2; font-size: 10px; color: var(--color-primary); background: rgba(225, 29, 72, 0.08); border: 1px solid rgba(225, 29, 72, 0.15); padding: 6px 8px; border-radius: 8px; display: flex; align-items: center; gap: 4px; font-weight: 600;">
+              <div id="calorie-unlock-admin-trigger" style="grid-column: span 2; font-size: 10px; color: var(--color-primary); background: rgba(225, 29, 72, 0.08); border: 1px solid rgba(225, 29, 72, 0.15); padding: 6px 8px; border-radius: 8px; display: flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 10px; height: 10px;">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <span>Unlock Admin to edit targets</span>
+                <span style="text-decoration: underline;">Unlock Admin to edit targets</span>
               </div>
             ` : ''}
             <div class="calc-group" style="display: flex; flex-direction: column; gap: 4px;">
